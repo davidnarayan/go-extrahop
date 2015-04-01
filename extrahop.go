@@ -24,7 +24,7 @@ const (
 )
 
 // Create a new ExtraHop API client
-func NewClient(host string, apikey string) *Client {
+func NewClient(host, apikey string) *Client {
 	// Setup a custom transport that ignores SSL certificate errors.
 	// TODO: This probably isn't what needs to happen long term...
 	tr := &http.Transport{
@@ -51,11 +51,11 @@ func (c *Client) Get(path string) (f interface{}, err error) {
 
 // do sends an HTTP request and returns the response
 func (c *Client) do(method, path string, data io.Reader) (f interface{}, err error) {
-	url := fmt.Sprintf("%s://%s/%s%s", c.Scheme, c.Host, DefaultPath, path)
+	url := fmt.Sprintf("%s://%s%s%s", c.Scheme, c.Host, DefaultPath, path)
 	req, err := http.NewRequest(method, url, data)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create request for %s: %s", url, err)
 	}
 
 	// Set the content type to JSON
@@ -69,14 +69,19 @@ func (c *Client) do(method, path string, data io.Reader) (f interface{}, err err
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request error from %s: %s", url, err)
 	}
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response error from %s: %s", url,
+			resp.Status)
+	}
+
 	// Parse and decode body
 	if err := json.NewDecoder(resp.Body).Decode(&f); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to decode response from %s: %s", url, err)
 	}
 
 	return f, nil
