@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/davidnarayan/extrahop"
+	"github.com/davidnarayan/go-extrahop"
 )
 
 // Command line flags
@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	// Create new ExtraHop client
-	eh := extrahop.Client()
+	eh := extrahop.NewClient(*host, *apikey)
 
 	// Get information about this ExtraHop
 	f, err := eh.Get("/extrahop")
@@ -29,6 +29,6 @@ func main() {
 
 	m := f.(map[string]interface{})
 
-	fmt.Println("ExtraHop version: %s", m["version"])
-	fmt.Println("ExtraHop ECM: %s", m["ecm"])
+	fmt.Println("ExtraHop version:", m["version"])
+	fmt.Println("ExtraHop ECM:", m["ecm"])
 }
